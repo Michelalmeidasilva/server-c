@@ -81,9 +81,9 @@
           long bytes_read = ftell(fp);
           fseek(fp, 0, SEEK_SET);
 
-          puts(" HTTP/1.0 200 OK ");
+          puts("HTTP/1.0 200 OK ");
 
-          send(socket, " HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n", 44, 0); // Send the header for succesful respond.
+          send(socket, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n", 44, 0); // Send the header for succesful respond.
           buffer = (char *)malloc(bytes_read * sizeof(char)); 
           
           fread(buffer, bytes_read, 1, fp); // Read the html file to buffer.
@@ -92,7 +92,7 @@
           
           fclose(fp);
       } else {
-          puts(" HTTP/1.0 404 Not Found ");
+          puts("HTTP/1.0 404 Not Found ");
           write(socket, "HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>", strlen("HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>"));
       }
 
@@ -144,7 +144,7 @@
 
               printf("%s", request_lines[2]);
               if (strncmp(request_lines[2], "HTTP/1.0", 8) != 0){
-                  puts(" HTTP/1.0 400 Bad Request \n");
+                  puts("HTTP/1.0 400 Bad Request \n");
 
                   char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>400 Bad Request</body></html>";
                   write(sock, message, strlen(message));
@@ -196,6 +196,7 @@
           }
       }
 
+      sleep(50);
       free(socket_desc);
       shutdown(sock, SHUT_RDWR);
       close(sock);
