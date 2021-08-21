@@ -33,7 +33,11 @@ Como compilar?
 Como executar com o curl na versão http 1.0? 
 - dependencias: [curl](https://curl.se/)
 
-### Como cliente:
+### Como cliente pelo navegador
+
+Pode ser acessado pelo navegador de sua preferência.
+
+### Como cliente pelo curl:
 
 Rodando o comando pelo terminal:
 - curl "http://localhost:8088/index.html" --http1.0

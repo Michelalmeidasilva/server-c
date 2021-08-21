@@ -11,6 +11,12 @@ struct configs {
     char * server_path;
 };
 
+void chomp(char *s) {
+    while(*s && *s != '\n' && *s != '\r') s++;
+ 
+    *s = 0;
+}
+
 char * get_current_path(){
     char* buffer;
 
@@ -52,6 +58,13 @@ struct configs  read_env(char * required_variable){
        }       
 
     }
+
+    if( server_path[len] == '\n' ){
+        printf("entrou?");
+        server_path[len-1] = 0;
+    }
+
+    chomp(server_path);
 
     config_env.port_number = port_number;
     config_env.server_path = server_path;

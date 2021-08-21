@@ -21,7 +21,8 @@
   #define CONNECTION_NUMBER 10
   #define PENDING_CONNECTIONS 10
 
-  /// Código Fonte baseado em 
+  /// Código Fonte baseado em [Özgür Hepsa?](https://github.com/ozgurhepsag/Multi-threaded-HTTP-Server)
+
 
 
   int thread_count = 0; // Keeps the number of the threads working simultaneously.
@@ -36,24 +37,22 @@
       char * server_path = config_env.server_path;
       char * full_path = (char *)malloc((strlen(server_path) + strlen(file_name)) * sizeof(char));
       
-
       strcpy(full_path, server_path); // Merge the file name that requested and path of the root folder
       strcat(full_path, file_name);
 
-      puts(full_path);
+      if ((fp=open(full_path, O_RDONLY)) > 0) {
+        int bytes;
+        char buffer[BUFFER_SIZE];
 
-      if ((fp=open(full_path, O_RDONLY)) > 0) //FILE FOUND
-      {
-          puts("Image Found.");
-          int bytes;
-          char buffer[BUFFER_SIZE];
+        puts("HTTP/1.0 200 OK ");
+        send(socket, "HTTP/1.0 200 OK\r\nContent-Type: image/jpeg\r\n\r\n", 45, 0);
 
-          send(socket, "HTTP/1.0 200 OK\r\nContent-Type: image/jpeg\r\n\r\n", 45, 0);
         while ( (bytes=read(fp, buffer, BUFFER_SIZE))>0 ) // Read the file to buffer. If not the end of the file, then continue reading the file
+       
         write (socket, buffer, bytes); // Send the part of the jpeg to client.
       }
-      else // If there is not such a file.
-      {
+      else  {
+          puts("HTTP/1.0 404 Not Found ");
           write(socket, "HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>", strlen("HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>"));
       }
 
@@ -69,21 +68,22 @@
       char * server_path = config_env.server_path;
 
       char *full_path = (char *)malloc((strlen(server_path) + strlen(file_name)) * sizeof(char));
+
       FILE *fp;
 
       strcpy(full_path, server_path); // Merge the file name that requested and path of the root folder
       strcat(full_path, file_name);
 
       fp = fopen(full_path, "r");
-      if (fp != NULL) //FILE FOUND
-      {
-          puts("File Found.");
 
+      if (fp != NULL){
           fseek(fp, 0, SEEK_END); // Find the file size.
           long bytes_read = ftell(fp);
           fseek(fp, 0, SEEK_SET);
 
-          send(socket, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n", 44, 0); // Send the header for succesful respond.
+          puts(" HTTP/1.0 200 OK ");
+
+          send(socket, " HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n", 44, 0); // Send the header for succesful respond.
           buffer = (char *)malloc(bytes_read * sizeof(char)); 
           
           fread(buffer, bytes_read, 1, fp); // Read the html file to buffer.
@@ -92,6 +92,7 @@
           
           fclose(fp);
       } else {
+          puts(" HTTP/1.0 404 Not Found ");
           write(socket, "HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>", strlen("HTTP/1.0 404 Not Found\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>404 File Not Found</body></html>"));
       }
 
@@ -109,14 +110,13 @@
       int sock = *((int *)socket_desc);
 
       // Get the request.
-      // https://www.ibm.com/docs/en/zos/2.2.0?topic=functions-recv-receive-data-socket
       request = recv(sock, client_reply, BUFFER_SIZE, 0);
 
       sem_wait(&mutex);
       thread_count++; 
 
-      if(thread_count > CONNECTION_NUMBER) // If there is 10 request at the same time, other request will be refused.
-      {
+      // If there is CONNECTION_NUMBER requests at the same time, other request will be refused.
+      if(thread_count > CONNECTION_NUMBER) {
           char *message = "HTTP/1.0 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>System is busy right now.</body></html>";
           write(sock, message, strlen(message));
           thread_count--; 
@@ -130,10 +130,10 @@
       sem_post(&mutex);
 
       if (request < 0){
-          puts("Recv failed");
+          puts("Recv failed\n");
       }
       else if (request == 0){
-          puts("Client disconnected upexpectedly.");
+          puts("Client disconnected upexpectedly. \n");
       }
       else{
           request_lines[0] = strtok(client_reply, " \t\n");
@@ -142,15 +142,18 @@
               request_lines[1] = strtok(NULL, " \t");
               request_lines[2] = strtok(NULL, " \t\n");
 
+              printf("%s", request_lines[2]);
               if (strncmp(request_lines[2], "HTTP/1.0", 8) != 0){
+                  puts(" HTTP/1.0 400 Bad Request \n");
+
                   char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>400 Bad Request</body></html>";
                   write(sock, message, strlen(message));
-              }else {
+              } else {
                   char *tokens[2]; // For parsing the file name and extension.
 
                   file_name = (char *)malloc(strlen(request_lines[1]) * sizeof(char));
                   strcpy(file_name, request_lines[1]);
-                  printf("get : %s", file_name);
+                  printf("get - %s ", file_name);
                   
                   // Getting the file name and extension
                   tokens[0] = strtok(file_name, ".");
@@ -193,8 +196,6 @@
           }
       }
 
-      sleep(50); 
-
       free(socket_desc);
       shutdown(sock, SHUT_RDWR);
       close(sock);
@@ -212,9 +213,7 @@
   // 3 using listen(), put the server socket in a passive mode, where it waits for the client to approach the server to make a connection
   // 4 using accept(), At this point, connection is established between client and server, and they are ready to transfer data.
   // 5 Go back to Step 3.
-
-  int main(int argc, char *argv[])
-  {
+  int main(int argc, char *argv[]){
       //inicialização de semaforos
       sem_init(&mutex, 0, 1); // Inıtialize the mutex from 1.
       int socket_desc, new_socket, len, *new_sock;
@@ -234,7 +233,7 @@
       
        //retorna -1 se der erro
       if (socket_desc == -1) {
-          puts("Could not create socket");
+          puts("Não possivel criar socket\n");
           return 1;
       }
 
@@ -244,18 +243,16 @@
 
 
       int bindReturn = bind(socket_desc, (struct sockaddr *)&server, sizeof(server));
+      
       if (bindReturn < 0){
-          puts("Binding failed");
-          printf("error msg: %d", bindReturn);
+          printf("binding failed%d\n", bindReturn);
           return 1;
       }
 
-      /// params:
-      /// socket descriptor
-      /// o maximo de conexoes na fila :D 
       listen(socket_desc,  PENDING_CONNECTIONS);
 
-      puts("Waiting for incoming connections...");
+      printf("Servidor montado no caminho :%s.\n", config_env.server_path);
+      printf("Esperando por conexões na porta ... :%d.\nm", port_number);
 
       len = sizeof(struct sockaddr_in);
 
@@ -263,12 +260,10 @@
           pthread_t sniffer_thread;
           new_sock = malloc(1);
 
-          // mudando o valor no new sock, é o sockas ñ tem jeito
           *new_sock = new_socket;
 
-          // Create a thread for each request.
           if (pthread_create(&sniffer_thread, NULL, connection_handler, (void *)new_sock) < 0){
-              puts("Could not create thread");
+              puts("Não foi possivel criar um novo processo. \n");
               return 1;
           }   
       }
