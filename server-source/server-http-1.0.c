@@ -104,7 +104,6 @@
       int request;
       char client_reply[BUFFER_SIZE], *request_lines[3];
       char *file_name;
-      char *extension;
 
       // Get the socket descriptor.
       int sock = *((int *)socket_desc);
@@ -189,7 +188,6 @@
                               sem_post(&mutex);
                           }
                       }
-                      free(extension);
                   }
                   free(file_name);
               }
