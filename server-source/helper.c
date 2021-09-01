@@ -17,17 +17,6 @@ void chomp(char *s) {
     *s = 0;
 }
 
-char * get_current_path(){
-    char* buffer;
-
-    if( (buffer=getcwd(NULL, 0)) == NULL) {
-        perror("failed to get current directory\n");
-    } else {
-        return buffer;
-    }
-
-    return 0;
-}
 
 struct configs  read_env(char * required_variable){
     char * line = NULL;
@@ -50,6 +39,7 @@ struct configs  read_env(char * required_variable){
        if(strstr(line, "SERVER_PATH") != NULL) {
            char * token = strtok(line, "SERVER_PATH=");
            server_path = token;
+           printf("aa %s aa", token);
        }
 
        if(strstr(line, "PORT") != NULL) {

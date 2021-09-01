@@ -44,7 +44,7 @@
         int bytes;
         char buffer[BUFFER_SIZE];
 
-        puts("HTTP/1.0 200 OK ");
+        puts("HTTP/1.0 200 OK");
         send(socket, "HTTP/1.0 200 OK\r\nContent-Type: image/jpeg\r\n\r\n", 45, 0);
 
         while ( (bytes=read(fp, buffer, BUFFER_SIZE))>0 ) // Read the file to buffer. If not the end of the file, then continue reading the file
@@ -81,7 +81,7 @@
           long bytes_read = ftell(fp);
           fseek(fp, 0, SEEK_SET);
 
-          puts("HTTP/1.0 200 OK ");
+          puts("HTTP/1.0 200 OK");
 
           send(socket, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n", 44, 0); // Send the header for succesful respond.
           buffer = (char *)malloc(bytes_read * sizeof(char)); 
