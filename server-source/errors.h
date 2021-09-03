@@ -1,2 +1,4 @@
-int BINDING_ERROR = 1;
-int SOCKER_ERROR = 1;
+#define BINDING_ERROR -3
+#define SOCKER_ERROR  -2
+
+#define CREATE_PROCESS_ERROR -1
