@@ -6,7 +6,7 @@ Entrega da primeira versão: 20/08/2021
 
 ## Descrição
 
-O projeto consiste em um servidor HTTP 1.0 que é capaz de responder a até dez resquisições HTML simultâneas.
+O projeto consiste em um servidor HTTP 1.1 que é capaz de responder a até dez resquisições HTML simultâneas.
 
 ## Membros:
 
@@ -28,9 +28,9 @@ Dentro desse arquivo altere as variaveis como desejar, mas lembre-se de seguir o
 Como compilar?
 - dependencias: [gcc](https://gcc.gnu.org/)
 
-- gcc -pthread helper.c server-http-1.0.c -o server.http
+- gcc -pthread helper.c server-http-1.1.c -o server.http
 
-Como executar com o curl na versão http 1.0? 
+Como executar com o curl na versão http 1.1? 
 - dependencias: [curl](https://curl.se/)
 
 ### Como cliente pelo navegador
@@ -40,7 +40,7 @@ Pode ser acessado pelo navegador de sua preferência.
 ### Como cliente pelo curl:
 
 Rodando o comando pelo terminal:
-- curl "http://localhost:8088/index.html" --http1.0
+- curl "http://localhost:8088/index.html" --http1.1
 
 Para facilitar foi feito um script rodando as 10 requisições em paralelo, faça o seguinte:
 Você deve alterar também a porta e o endereço dentro desse arquivo de script chamado "requests-script"
@@ -54,6 +54,11 @@ Você deve alterar também a porta e o endereço dentro desse arquivo de script 
 *   Código baseado no repositório público:
 
 [Özgür Hepsa?](https://github.com/ozgurhepsag/Multi-threaded-HTTP-Server)
+
+
+* Utilização do código de filas no repositório publico:
+
+[Queue-c](https://github.com/matthewhartstonge/c-queue)
 
 *   Sobre o desenvolvimento do projeto podemos afirmar:
 
