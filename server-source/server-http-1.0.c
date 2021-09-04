@@ -103,107 +103,107 @@ void *connection_handler(void *arguments){
   // printf("sera??????? %d \n", args->sock);
   // // queue_client_requests
 
-  // int request;
-  // char client_reply[BUFFER_SIZE], *request_lines[3];
-  // char *file_name;
+  int request;
+  char client_reply[BUFFER_SIZE], *request_lines[3];
+  char *file_name;
   char *message = "HTTP/1.0 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>System is busy right now.</body></html>\n";
   write(sock, message, strlen(message));
   close(sock);
-  // // Get the socket descriptor.
-  // int sock = *((int *)args->arg1);
+  // Get the socket descriptor.
+  int sock = *((int *)args->arg1);
 
-  // // Get the request.
-  // request = recv(sock, client_reply, BUFFER_SIZE, 0);
+  // Get the request.
+  request = recv(sock, client_reply, BUFFER_SIZE, 0);
 
-  // sem_wait(&mutex);
-  // thread_count++;
+  sem_wait(&mutex);
+  thread_count++;
 
-  // // If there is CONNECTION_NUMBER requests at the same time, other request will be refused.
-  // if (thread_count > CONNECTION_NUMBER)
-  // {
-    // write(sock, message, strlen(message));
-  //   char *message = "HTTP/1.0 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>System is busy right now.</body></html>\n";
-  //   thread_count--;
-  //   sem_post(&mutex);
-  //   free(socket);
-  //   shutdown(sock, SHUT_RDWR);
-  //   close(sock);
-  //   sock = -1;
-  //   pthread_exit(NULL);
-  // }
+  // If there is CONNECTION_NUMBER requests at the same time, other request will be refused.
+  if (thread_count > CONNECTION_NUMBER)
+  {
+    write(sock, message, strlen(message));
+    char *message = "HTTP/1.0 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>System is busy right now.</body></html>\n";
+    thread_count--;
+    sem_post(&mutex);
+    free(socket);
+    shutdown(sock, SHUT_RDWR);
+    close(sock);
+    sock = -1;
+    pthread_exit(NULL);
+  }
 
-  // sem_post(&mutex);
+  sem_post(&mutex);
 
-  // printf("Request: %d\n", request);
+  printf("Request: %d\n", request);
 
-  // if (request < 0)
-  // {
-  //   puts("Recv failed\n");
-  // }
+  if (request < 0)
+  {
+    puts("Recv failed\n");
+  }
 
-  // if (request == 0)
-  // {
-  //   puts("Client disconnected upexpectedly. \n");
-  // }
+  if (request == 0)
+  {
+    puts("Client disconnected upexpectedly. \n");
+  }
 
-  // request_lines[0] = strtok(client_reply, " \t\n");
+  request_lines[0] = strtok(client_reply, " \t\n");
 
-  // if (strncmp(request_lines[0], "GET\0", 4) == 0 && strncmp(request_lines[2], "HTTP/1.0", 8) == 0)
-  // {
-  //   // Parsing the request header.
-  //   request_lines[1] = strtok(NULL, " \t");
-  //   request_lines[2] = strtok(NULL, " \t\n");
+  if (strncmp(request_lines[0], "GET\0", 4) == 0 && strncmp(request_lines[2], "HTTP/1.0", 8) == 0)
+  {
+    // Parsing the request header.
+    request_lines[1] = strtok(NULL, " \t");
+    request_lines[2] = strtok(NULL, " \t\n");
 
-  //   char *tokens[2]; // For parsing the file name and extension.
+    char *tokens[2]; // For parsing the file name and extension.
 
-  //   file_name = (char *)malloc(strlen(request_lines[1]) * sizeof(char));
-  //   strcpy(file_name, request_lines[1]);
-  //   printf("get - %s ", file_name);
+    file_name = (char *)malloc(strlen(request_lines[1]) * sizeof(char));
+    strcpy(file_name, request_lines[1]);
+    printf("get - %s ", file_name);
 
-  //   // Getting the file name and extension
-  //   tokens[0] = strtok(file_name, ".");
-  //   tokens[1] = strtok(NULL, ".");
+    // Getting the file name and extension
+    tokens[0] = strtok(file_name, ".");
+    tokens[1] = strtok(NULL, ".");
 
-  //   if (tokens[0] != NULL || tokens[1] != NULL)
-  //   {
-  //     if (strcmp(tokens[1], "html") == 0){
-  //         sem_wait(&mutex);
-  //         html_handler(sock, request_lines[1]);
-  //         sem_post(&mutex);
-  //     }
-  //     else{
-  //       char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\n\r\n<!doctype html><html><body>400 Bad Request.(Supported File Types: html)</body></html>";
-  //       write(sock, message, strlen(message));
-  //     }
-  //   }
-  //   else
-  //   {
+    if (tokens[0] != NULL || tokens[1] != NULL)
+    {
+      if (strcmp(tokens[1], "html") == 0){
+          sem_wait(&mutex);
+          html_handler(sock, request_lines[1]);
+          sem_post(&mutex);
+      }
+      else{
+        char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\n\r\n<!doctype html><html><body>400 Bad Request.(Supported File Types: html)</body></html>";
+        write(sock, message, strlen(message));
+      }
+    }
+    else
+    {
 
-  //     char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\n\r\n<!doctype html><html><body>400 Bad Request. (You need to request to jpeg and html files)</body></html>";
-  //     write(sock, message, strlen(message));
-  //   }
-  //   free(file_name);
-  // }
-  // else
-  // {
-  //   puts("HTTP/1.0 400 Bad Request \n");
+      char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\n\r\n<!doctype html><html><body>400 Bad Request. (You need to request to jpeg and html files)</body></html>";
+      write(sock, message, strlen(message));
+    }
+    free(file_name);
+  }
+  else
+  {
+    puts("HTTP/1.0 400 Bad Request \n");
 
-  //   char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>400 Bad Request</body></html>";
-  //   write(sock, message, strlen(message));
-  // }
+    char *message = "HTTP/1.0 400 Bad Request\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!doctype html><html><body>400 Bad Request</body></html>";
+    write(sock, message, strlen(message));
+  }
 
-  //   sleep(50);
-  // free(file_name);
+    sleep(50);
+  free(file_name);
 
 
-  // free(socket);
-  // shutdown(sock, SHUT_RDWR);
-  // close(sock);
-  // sock = -1;
-  // sem_wait(&mutex);
-  // sem_post(&mutex);
-  // thread_count--;
-  // pthread_exit(NULL);
+  free(socket);
+  shutdown(sock, SHUT_RDWR);
+  close(sock);
+  sock = -1;
+  sem_wait(&mutex);
+  sem_post(&mutex);
+  thread_count--;
+  pthread_exit(NULL);
 }
 
 
@@ -315,17 +315,6 @@ int main(int argc, char *argv[]){
       socket_counter++;
     }
   }
-
-  printf("------------------------------------\n\n\n\n\n\n");
-  for(int i = 0; i < LIMIT_CLIENTS; i++){
-    printf("CLIENTE %d\n", i);
-    printf("clients[i]->address: %d\n", clients[i].address);
-    for(int j = 0; j < QUEUE_SIZE; j++){
-      Request * item  = (Request *) dequeue(clients[i].queue_requests);
-      printf("item: %d\n ",  item->value );
-    }
-  }
-  
   
   free(new_sock);
   free(clients);
