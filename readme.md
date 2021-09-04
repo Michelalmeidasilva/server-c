@@ -60,7 +60,10 @@ Você deve alterar também a porta e o endereço dentro desse arquivo de script 
 
 [Queue-c](https://github.com/matthewhartstonge/c-queue)
 
-*   Sobre o desenvolvimento do projeto podemos afirmar:
+
+
+
+* Sobre o desenvolvimento do projeto podemos afirmar:
 
 Este projeto foi desenvolvido integralmente pela equipe, sem ajuda não autorizada de alunos não membros do projeto no processo de codificação.
 
