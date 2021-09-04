@@ -4,24 +4,19 @@
 #include <limits.h>
 #include <unistd.h>
 
+#include "queue.h"
+#include "helper.h"
+
 #define _GNU_SOURCE
 
-struct configs
-{
-    char *port_number;
-    char *server_path;
-};
-
-void chomp(char *s)
-{
+void chomp(char *s){
     while (*s && *s != '\n' && *s != '\r')
         s++;
 
     *s = 0;
 }
 
-char *get_current_path()
-{
+char *get_current_path(){
     char *buffer;
 
     if ((buffer = getcwd(NULL, 0)) == NULL)
@@ -36,8 +31,7 @@ char *get_current_path()
     return 0;
 }
 
-struct configs read_env(char *required_variable)
-{
+struct configs read_env(char *required_variable){
     char *line = NULL;
     char *server_path;
     char *port_number;
@@ -56,14 +50,12 @@ struct configs read_env(char *required_variable)
 
     FILE *fp = fopen("/home/michelalmeida/Workspace/Faculdade/server-c/server-source/.env", "r");
 
-    if (fp == NULL)
-    {
+    if (fp == NULL){
         perror("arquivo .env não encontrado\n");
         exit(EXIT_FAILURE);
     }
 
-    while ((read = getline(&line, &len, fp)) != -1)
-    {
+    while ((read = getline(&line, &len, fp)) != -1){
         if (strstr(line, "SERVER_PATH") != NULL)
         {
             char *token = strtok(line, "SERVER_PATH=");
@@ -77,8 +69,7 @@ struct configs read_env(char *required_variable)
         }
     }
 
-    if (server_path[len] == '\n')
-    {
+    if (server_path[len] == '\n'){
         printf("entrou?");
         server_path[len - 1] = 0;
     }
