@@ -1,0 +1,2 @@
+int BINDING_ERROR = 1;
+int SOCKER_ERROR = 1;
