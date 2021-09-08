@@ -33,7 +33,7 @@ void setup_server(int * socket_desc,  struct sockaddr_in server){
     exit(SOCKER_ERROR);
   }
 
-  server.sin_family = AF_INET;          // familia de protocolo IP
+  server.sin_family = AF_INET;          // familia deFunç protocolo IP
   server.sin_addr.s_addr = INADDR_ANY;  // Endereços que estão vindo para mensagens
   server.sin_port = htons(PORT_DEFAULT); /// porta que está sendo recebida e convertida para byte
 
@@ -104,12 +104,13 @@ void sendResponse(char *header, char *conection, char *media_type, char *html_re
 Request  request_header( char client_reply[BUFFER_SIZE]){
   Request request;
 
+  printf("\nRequest %s\n", client_reply);
+
   request.method = strtok(client_reply, " \t\n");
   request.resource = strtok(NULL, " \t");
   request.protocol = strtok(NULL, " \t\n");
 
-  printf("Method:%s\tResource:%s\tProtocol:%s\n", request.method, request.resource, request.protocol);
-
+  printf("\nMethod:%s.\nResource:%s.\nProtocol:%s\n", request.method, request.resource, request.protocol);
   return request;
 }
 
@@ -197,7 +198,7 @@ void *connection_handler(void * sock_desc){
     
     if (request > 0) {
       Request request = request_header(client_reply);
-      
+
       if (isMethodGet(request.method) && isProtocolHttp(request.protocol, VERSION_HTTP1_0) || isProtocolHttp(request.protocol, VERSION_HTTP1_1)){      
         file_name = (char *)malloc(strlen(request.resource) * sizeof(char));
 
