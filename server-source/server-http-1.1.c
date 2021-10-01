@@ -64,15 +64,6 @@ int checkFileExtension(char * file_name, char * extension_type){
   return -1;
 }
 
-
-// Controle de tempo
-// Refatorar para leitura em pacotes
-// Funcionando também para QOS controlando a taxa de leitura/escrita
-// Temporização  * microsleep (tempoinicial - tempofinal)
-// 
-// Garantir os recursos a taxa com os requisitos especificados, ou não atender a req. 
-// Controle de recursos do servidor (parametrização do servidor) limite de recursos 
-
 /**
   * Método para enviar uma mensagem ao cliente através do sock: 
   * media_type = 
@@ -250,20 +241,19 @@ void *connection_persistent(void * sock_desc){
  * @return void
  */
 void setup_server(int * socket_desc,  struct sockaddr_in server){
-  sem_init(&mutex, 0, 1); // Instanciação do mutex
+  sem_init(&mutex, 0, 1); 
 
-  * socket_desc = socket(AF_INET, SOCK_STREAM, 0);  // recebe o socket do servidor
-  
-  if (* socket_desc == -1){                 // Se o retorno da função socket acima for -1, então deu erro de criação do socket
+  * socket_desc = socket(AF_INET, SOCK_STREAM, 0);  
+  if (* socket_desc == -1){                
     perror("Não possivel criar socket\n");
     exit(SOCKER_ERROR);
   }
 
-  server.sin_family = AF_INET;           //  familia de endereço do protocolo IPV4, esse servidor vai ser de endereço IPV4  
-  server.sin_addr.s_addr = INADDR_ANY;   //  Seta um  endereço disponivel para fazer conexão com o server.
-  server.sin_port = htons(PORT_DEFAULT); /// Conversão do valor numerico da porta do servidor em byte
+  server.sin_family = AF_INET;          
+  server.sin_addr.s_addr = INADDR_ANY;  
+  server.sin_port = htons(PORT_DEFAULT); 
 
-  if (bind(* socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0){ // Faz o vinculo do socket criado com o servidor
+  if (bind(* socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0){ 
     perror("error binding");
     exit(BINDING_ERROR);
   }
