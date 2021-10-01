@@ -1,6 +1,6 @@
 #define BUFFER_SIZE 1024
 #define CONNECTION_NUMBER 5
-#define PENDING_CONNECTIONS 10
+#define QUEUE_PENDING_CONNECTION 10
 #define QUEUE_SIZE 10
 #define LIMIT_CLIENTS 5
 
@@ -9,6 +9,7 @@
 
 #define HTML_TYPE "html"
 #define JPEG_TYPE "jpeg"
+#define PNG_TYPE "png"
 
 typedef struct {
   char * method;

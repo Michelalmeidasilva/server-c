@@ -52,8 +52,6 @@ int main () {
 
     write(sock, msg_write, strlen(msg_write) + 1);
 
-    printf("\nEnviando a mensagem: %s\n", msg_write);
-
     read(sock, msg_read, 1024);
     printf("%s\n", msg_read);
 

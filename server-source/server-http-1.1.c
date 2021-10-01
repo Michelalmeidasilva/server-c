@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <netdb.h>
 
 #include <unistd.h>
 
@@ -23,70 +24,70 @@ int thread_count = 0;
 int socket_counter = 0;
 sem_t mutex;          
 
-void setup_server(int * socket_desc,  struct sockaddr_in server){
-  sem_init(&mutex, 0, 1); 
-
-  * socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-  
-  if (* socket_desc == -1){
-    perror("Não possivel criar socket\n");
-    exit(SOCKER_ERROR);
-  }
-
-  server.sin_family = AF_INET;          // familia deFunç protocolo IP
-  server.sin_addr.s_addr = INADDR_ANY;  // Endereços que estão vindo para mensagens
-  server.sin_port = htons(PORT_DEFAULT); /// porta que está sendo recebida e convertida para byte
-
-  if (bind(* socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0){
-    perror("error binding");
-    exit(BINDING_ERROR);
-  }
-
-  listen(* socket_desc, 1);
-  printf("Esperando por conexões na porta ... :%d.\n", PORT_DEFAULT);
-}
 
 /**
- * @return  retorna 0 se for um metodo get
+ * @return  0 se for um metodo get
  */
 int isMethodGet(char * method){
   return strncmp(method, "GET\0", 4) == 0;
 }
 
 
-/*flag para versao http 1.0.
-    VERSION_HTTP1_0 = flag para versão do HTTP 1.0;     
-    VERSION_HTTP1_1 = flag para versão do HTTP 1.1;          
-  retorna 0 se o protocolo for do tipo passado como argumento. */
+/**
+ * flag para versao http 1.0.
+ * VERSION_HTTP1_0 = flag para versão do HTTP 1.0;     
+ * VERSION_HTTP1_1 = flag para versão do HTTP 1.1;          
+ * retorna 0 se o protocolo for do tipo passado como argumento. 
+ * @param protocol
+ * @param version
+ * @return int
+*/
 int isProtocolHttp(char * protocol, char * version){
   return strncmp(protocol, version, 8) == 0;
 }
 
-
-/* checagem de extensão para extensões.
-    HTML_TYPE = flag para extensão html;     
-    JPEG_TYPE = flag para extensão jpeg;          
-  @return  0 se a extensão for do tipo passado como argumento. */
+/** checagem de extensão para extensões:
+  *  HTML_TYPE = flag para extensão html;     
+  *  JPEG_TYPE = flag para extensão jpeg;          
+  * @return  0 se a extensão for do tipo passado como argumento. 
+*/
 int checkFileExtension(char * file_name, char * extension_type){
   char * token[2];
   
   token[0] = strtok(file_name, ".");
   token[1] = strtok(NULL, ".");
 
-  return strcmp(token[1],  extension_type) == 0;
+  if(token[1]!= NULL && token[0] != NULL){
+    return strcmp(token[1],  extension_type) == 0;
+  }
+
+  return -1;
 }
 
 
-/*
-  Enviar uma mensagem ao cliente: 
-  header = header to send protocol method;
-  connection_close = general header controls whether or not the network connection stays open after the current transaction finishes;
-  media_type = is a two-part identifier for file formats and format contents transmitted on the Internet; */
-void sendResponse(char *header, char *conection, char *media_type, char *html_render, int sock){
+// Controle de tempo
+// Refatorar para leitura em pacotes
+// Funcionando também para QOS controlando a taxa de leitura/escrita
+// Temporização  * microsleep (tempoinicial - tempofinal)
+// 
+// Garantir os recursos a taxa com os requisitos especificados, ou não atender a req. 
+// Controle de recursos do servidor (parametrização do servidor) limite de recursos 
+
+/**
+  * Método para enviar uma mensagem ao cliente através do sock: 
+  * media_type = 
+  * @param header      : header to send protocol method;
+  * @param connection
+  * @param media_type  : is a two-part identifier for file formats and format contents transmitted on the Internet; 
+  * @param html_render
+  * @param sock
+  * @return void
+*/
+void sendResponse(char *header, char *connection, char *media_type, char *html_render, int sock){
   char *message ;
 
   strcat(message, header);
-  strcat(message, conection);
+  strcat(message, connection);
   strcat(message, media_type);
   strcat(message, html_render);
   
@@ -104,8 +105,6 @@ void sendResponse(char *header, char *conection, char *media_type, char *html_re
 Request  request_header( char client_reply[BUFFER_SIZE]){
   Request request;
 
-  printf("\nRequest %s\n", client_reply);
-
   request.method = strtok(client_reply, " \t\n");
   request.resource = strtok(NULL, " \t");
   request.protocol = strtok(NULL, " \t\n");
@@ -114,21 +113,27 @@ Request  request_header( char client_reply[BUFFER_SIZE]){
   return request;
 }
 
-/*
- * Manipulador de arquivos, a função verifica a extensão do arquivo e manipula o `FILE` para carregar e mandar ao cliente a resposta.
+/**
+ * Manipulador de recursos, a função verifica a extensão do arquivo e manipula o `FILE` para carregar e mandar ao cliente o recurso na resposta.
  * Caso o arquivo não seja encontrado, a mensagem de NOT FOUND 404 é enviada.
+ * Types permitidos:
+ * - .JPG
+ * - .HTML
+ * @param socket
+ * @param file_name
+ * @return void
  */
-
-void file_handler(int socket, char *file_name){
+void get_resource(int socket, char *file_name){
   char *full_path = (char *)malloc((strlen(PATH) + strlen(file_name)) * sizeof(char));
   char *buffer;
-
+  
   strcpy(full_path, PATH); 
   strcat(full_path, file_name);
 
   if(checkFileExtension(file_name, HTML_TYPE)){
     FILE *fp = fopen(full_path, "r");
-
+  
+ 
     if(fp != NULL){
       fseek(fp, 0, SEEK_END); 
       long bytes_read = ftell(fp);
@@ -143,11 +148,14 @@ void file_handler(int socket, char *file_name){
       fread(buffer, bytes_read, 1, fp);  
       write(socket, buffer, bytes_read); 
       free(fp);
+    } else {
+      puts(NOT_FOUND_MESSAGE_TEXT);
+      sendResponse(NOT_FOUND_MESSAGE_TEXT, "Connection: close\r\n", "Content-Type: text/html\r\n\r\n", NOT_FOUND_MESSAGE_HTML, socket);
     }
-  } else if(checkFileExtension(file_name, JPEG_TYPE)){
+  } else if(checkFileExtension(file_name, JPEG_TYPE) || checkFileExtension(file_name, PNG_TYPE)){
     int fp = open(full_path, O_RDONLY);
 
-    if (fp > 0) {
+    if (fp > 0 ) {
       buffer[BUFFER_SIZE];
 
       int bytes;
@@ -159,6 +167,9 @@ void file_handler(int socket, char *file_name){
       while ( (bytes=read(fp, buffer, BUFFER_SIZE))>0 ) // Read the file to buffer. If not the end of the file, then continue reading the file
       
       write(socket, buffer, bytes); // Send the part of the jpeg to client.
+    } else {
+      puts(NOT_FOUND_MESSAGE_TEXT);
+      sendResponse(NOT_FOUND_MESSAGE_TEXT, "Connection: close\r\n", "Content-Type: text/html\r\n\r\n", NOT_FOUND_MESSAGE_HTML, socket);
     }
   } else {
     puts(NOT_FOUND_MESSAGE_TEXT);
@@ -168,7 +179,9 @@ void file_handler(int socket, char *file_name){
   free(full_path);
 }
 
-
+/*
+* Finalização de uma conexão persistente
+*/
 void close_connection(int * sock){
   shutdown(* sock, SHUT_RDWR);
   close(* sock);
@@ -180,22 +193,29 @@ void close_connection(int * sock){
 }
 
 
-void *connection_handler(void * sock_desc){
+// socket bloqueante vs não bloqueante
+
+/**
+ * @param sock_desc
+ * @return void 
+ * Instanciação de uma thread para a conexão persistente com um cliente até o cliente fechar
+*/
+void *connection_persistent(void * sock_desc){
   char *file_name, client_reply[BUFFER_SIZE];
   int request, sock = *((int *) sock_desc);
 
   printf("\n---------------------------\n");
+  
+  //temporização 
   while(1){
+    // Limitação do buffer size 
     request = recv(sock, client_reply, BUFFER_SIZE, 0);
+   
+    if(request == 0){
+      printf("closed abruptely");
+      close_connection(&sock);
+    }
 
-    if (request < 0){
-      perror("Error 11: Recv failed, msg: ");
-      close_connection(&sock);
-    } else if (request == 0){
-      perror("Error 44: Client disconnected upexpectedly, msg:");
-      close_connection(&sock);
-    } 
-    
     if (request > 0) {
       Request request = request_header(client_reply);
 
@@ -206,7 +226,7 @@ void *connection_handler(void * sock_desc){
 
         if (file_name != NULL) {
           sem_wait(&mutex);
-          file_handler(sock, request.resource);
+          get_resource(sock, request.resource);
           sem_post(&mutex);
         } else {
           sendResponse(BAD_REQUEST_MESSAGE_TEXT, "Connection: close\r\n", "Content-Type: text/html\r\n\r\n", BAD_REQUEST_MESSAGE_HTML, sock);
@@ -222,10 +242,41 @@ void *connection_handler(void * sock_desc){
   close_connection(&sock);
 }
 
-int running_server(int socket_desc){
+/**
+ * Instanciação do servidor, reserva uma socket para o servidor
+ * Faz a vinculação das portas
+ * @param socket_desc 
+ * @param server
+ * @return void
+ */
+void setup_server(int * socket_desc,  struct sockaddr_in server){
+  sem_init(&mutex, 0, 1); // Instanciação do mutex
+
+  * socket_desc = socket(AF_INET, SOCK_STREAM, 0);  // recebe o socket do servidor
+  
+  if (* socket_desc == -1){                 // Se o retorno da função socket acima for -1, então deu erro de criação do socket
+    perror("Não possivel criar socket\n");
+    exit(SOCKER_ERROR);
+  }
+
+  server.sin_family = AF_INET;           //  familia de endereço do protocolo IPV4, esse servidor vai ser de endereço IPV4  
+  server.sin_addr.s_addr = INADDR_ANY;   //  Seta um  endereço disponivel para fazer conexão com o server.
+  server.sin_port = htons(PORT_DEFAULT); /// Conversão do valor numerico da porta do servidor em byte
+
+  if (bind(* socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0){ // Faz o vinculo do socket criado com o servidor
+    perror("error binding");
+    exit(BINDING_ERROR);
+  }
+
+  listen(* socket_desc, QUEUE_PENDING_CONNECTION);
+}
+
+int run_server(int socket_desc){
   struct sockaddr_in client;
   int len = sizeof(struct sockaddr_in);
   int new_socket, *new_sock;
+  
+  printf("Rodando o servidor na porta %d\n", PORT_DEFAULT);
 
   while (new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&len)){
     pthread_t sniffer_thread;
@@ -233,10 +284,10 @@ int running_server(int socket_desc){
     new_sock = malloc(1);
     *new_sock = new_socket;
     
-    if (pthread_create(&sniffer_thread, NULL, connection_handler, (void *) new_sock) < 0){
-      perror("Não foi possivel criar um novo processo.\n");
+    if (pthread_create(&sniffer_thread, NULL, connection_persistent, (void *) new_sock) < 0){
+      perror("Não foi possivel criar uma nova conexão.\n");
       exit(CREATE_PROCESS_ERROR);
-    }  
+    } 
   }
 
   free(new_sock);
@@ -244,11 +295,11 @@ int running_server(int socket_desc){
 
 int main(int argc, char *argv[]){
   int socket_desc;
-  struct sockaddr_in server, client;
+  struct sockaddr_in server;
 
   setup_server(&socket_desc, server);
-  listen(socket_desc, 1);
-  running_server(socket_desc);
+  
+  run_server(socket_desc);
   
   return 0;
 }
