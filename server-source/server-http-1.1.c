@@ -183,9 +183,6 @@ void close_connection(int * sock){
   pthread_exit(NULL);
 }
 
-
-// socket bloqueante vs não bloqueante
-
 /**
  * @param sock_desc
  * @return void 
@@ -197,9 +194,7 @@ void *connection_persistent(void * sock_desc){
 
   printf("\n---------------------------\n");
   
-  //temporização 
   while(1){
-    // Limitação do buffer size 
     request = recv(sock, client_reply, BUFFER_SIZE, 0);
    
     if(request == 0){
