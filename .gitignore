@@ -1,2 +1,3 @@
 server-source/.env
 .vscode/
+server-source/http-server.out
