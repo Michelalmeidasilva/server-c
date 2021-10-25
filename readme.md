@@ -1,52 +1,32 @@
 
-# Trabalho prático de redes de computadores
-
-Docente: Leonardo Bidese de Pinho
-Entrega da segunda versão: 03/09/2021
-
 ## Descrição
 
-O projeto consiste em um servidor HTTP 1.1 com QoS que é capaz de responder a até dez resquisições HTML simultâneas.
+Servidor HTTP 1.1.
 
-## Membros:
+## Como executar o servidor :
 
-*   Maria Elizabeth Barcena
-*   Michel Almeida da Silva
-*   Thiago Porto Mendes
+Para rodar o servidor, você deve primeiramente definir as configurações de ambiente,
+para isso, altere no arquivo `server-source/env.h` as variaveis `PORT_DEFAULT` e `PATH` para suas respectivas configurações.
 
-## Como executar o servidor e cliente:
-### Como servidor:
-
-Para rodar o servidor, você deve primeiramente definir as configurações de ambiente, ou seja qual é o path de onde estão os arquivos e também o numero da porta. Para isso há um altere no arquivo de header as variaveis PORT_DEFAULT e PATH. A variavel `path`indica onde estão os arquivos do servidor e a variavel `PORT_DEFAULT` qual a porta padrão do servidor. 
-
-Como compilar?
+### Como compilar e executar?
+Primero instale o compilador gcc:
 - dependencias: [gcc](https://gcc.gnu.org/)
+
+Logo após, enter na pasta `server-source` e execute o seguinte comando:
 
 - gcc -pthread server-http-1.1.c -o server.http
 
-Como executar com o curl na versão http 1.1? 
-- dependencias: [curl](https://curl.se/)
+ ***após isso será gerado um arquivo server.http de saída, este arquivo é o executavel do servidor*** 
+E então execute no terminal com ./server.http
 
 
-### Como client pelo client.c
-Compile o client.c com o gcc e execute. 
-- Esse cliente servirá para fazer requisições http.
+### Como enviar requisições ao servidor?
 
-### Como cliente pelo navegador
+Pode ser acessado pelo navegador de sua preferência e pode então ser acessado diretamente na barra de pesquisa, por exemplo: `http://localhost:3000/index.html`.
 
-Pode ser acessado pelo navegador de sua preferência.
 
-### Como cliente pelo curl:
-
-Rodando o comando pelo terminal:
-- curl "http://localhost:8088/index.html" --http1.1
-
-Para facilitar foi feito um script rodando as 10 requisições em paralelo, faça o seguinte:
-Você deve alterar também a porta e o endereço dentro desse arquivo de script chamado "requests-script"
-
- - $ chmod +x
- - $ ./requests-script
-
+Também é possível através do programa curl, rode pelo terminal através da CLI:
+- curl "http://localhost:3000/index.html" --http1.1
 
 ## Reconhecimentos:
 
@@ -60,5 +40,4 @@ Você deve alterar também a porta e o endereço dentro desse arquivo de script 
 
 * Sobre o desenvolvimento do projeto podemos afirmar:
 
-Este projeto foi desenvolvido integralmente pela equipe, sem ajuda não autorizada de alunos não membros do projeto no processo de codificação.
 
